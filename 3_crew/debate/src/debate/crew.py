@@ -1,5 +1,6 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
+import os
 
 
 @CrewBase
@@ -10,10 +11,30 @@ class Debate():
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
 
+    openai_llm = LLM(
+        model="openai/gpt-4o-mini",
+        base_url=os.getenv("OPENAI_BASE_URL"),
+        api_key=os.getenv("OPENAI_API_KEY"),
+    )
+    anthropic_llm = LLM(
+        model="anthropic/claude-sonnet-4-6",
+        base_url=os.getenv("ANTHROPIC_BASE_URL"),
+        api_key=os.getenv("ANTHROPIC_API_KEY"),
+    )
+
     @agent
     def debater(self) -> Agent:
         return Agent(
             config=self.agents_config['debater'],
+            llm=self.openai_llm,
+            verbose=True
+        )
+
+    @agent
+    def opposer(self) -> Agent:
+        return Agent(
+            config=self.agents_config['opposer'],
+            llm=self.openai_llm,
             verbose=True
         )
 
@@ -21,6 +42,7 @@ class Debate():
     def judge(self) -> Agent:
         return Agent(
             config=self.agents_config['judge'],
+            llm=self.anthropic_llm,
             verbose=True
         )
 
